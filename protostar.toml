@@ -1,0 +1,7 @@
+[project]
+protostar-version = "0.13.0"
+lib-path = "lib"
+cairo-path = ["lib"]
+
+[contracts]
+verifier = ["src/main.cairo"]
