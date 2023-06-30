@@ -4,6 +4,7 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin, SignatureBuiltin
 from starkware.cairo.common.hash import hash2
 from starkware.cairo.common.signature import verify_ecdsa_signature
 from starkware.starknet.common.syscalls import get_caller_address, get_block_timestamp
+from cairo_contracts.src.openzeppelin.upgrades.library import Proxy
 from starkware.cairo.common.math import assert_le_felt
 
 @storage_var
@@ -18,10 +19,10 @@ func _starknetid_contract() -> (starknetid_contract: felt) {
 func _public_key() -> (public_key: felt) {
 }
 
-@constructor
-func constructor{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
-    starknetid_contract, public_key
+func initializer{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    proxy_admin, starknetid_contract, public_key
 ) {
+    Proxy.initializer(proxy_admin);
     _starknetid_contract.write(starknetid_contract);
     _public_key.write(public_key);
     return ();
@@ -62,5 +63,14 @@ func write_confirmation{
     let (public_key) = _public_key.read();
     verify_ecdsa_signature(message_hash, public_key, sig[0], sig[1]);
     StarknetID.set_verifier_data(starknetid_contract, token_id, field, 1);
+    return ();
+}
+
+@external
+func upgrade{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
+    new_implementation: felt
+) {
+    Proxy.assert_only_admin();
+    Proxy._set_implementation_hash(new_implementation);
     return ();
 }
