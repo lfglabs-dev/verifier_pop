@@ -1,3 +1,3 @@
 mod verifier;
+#[cfg(test)]
 mod tests;
-mod interface;

@@ -2,8 +2,8 @@
 trait IVerifier<TContractState> {
     fn write_confirmation(
         ref self: TContractState,
-        token_id: felt252,
-        timestamp: felt252,
+        token_id: u128,
+        timestamp: u64,
         field: felt252,
         data: felt252,
         sig: (felt252, felt252)
@@ -19,7 +19,7 @@ mod Verifier {
     use option::OptionTrait;
     use ecdsa::check_ecdsa_signature;
 
-    use verifier_contract::interface::{IStarknetIDDispatcher, IStarknetIDDispatcherTrait};
+    use identity::interface::identity::{IIdentityDispatcher, IIdentityDispatcherTrait};
 
     #[storage]
     struct Storage {
@@ -40,25 +40,21 @@ mod Verifier {
     impl VerifierImpl of super::IVerifier<ContractState> {
         fn write_confirmation(
             ref self: ContractState,
-            token_id: felt252,
-            timestamp: felt252,
+            token_id: u128,
+            timestamp: u64,
             field: felt252,
             data: felt252,
             sig: (felt252, felt252)
         ) {
             let caller = get_caller_address();
             let starknetid_contract = self._starknetid_contract.read();
-            let owner = IStarknetIDDispatcher {
-                contract_address: starknetid_contract
-            }.owner_of(token_id);
+            let owner = IIdentityDispatcher { contract_address: starknetid_contract }
+                .owner_of(token_id);
             assert(caller == owner, 'Caller is not owner');
 
             // ensure confirmation is not expired
             let current_timestamp = get_block_timestamp();
-            assert(
-                current_timestamp <= timestamp.try_into().expect('error converting felt to u64'),
-                'Confirmation is expired'
-            );
+            assert(current_timestamp <= timestamp, 'Confirmation is expired');
 
             let (sig_0, sig_1) = sig;
             let is_blacklisted = self.blacklisted_point.read(sig_0);
@@ -73,9 +69,8 @@ mod Verifier {
             let is_valid = check_ecdsa_signature(message_hash, public_key, sig_0, sig_1);
             assert(is_valid, 'Invalid signature');
 
-            IStarknetIDDispatcher {
-                contract_address: starknetid_contract
-            }.set_verifier_data(token_id, field, 1);
+            IIdentityDispatcher { contract_address: starknetid_contract }
+                .set_verifier_data(token_id, field, 1, 0);
         }
     }
 }
