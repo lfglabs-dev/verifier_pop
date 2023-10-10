@@ -4,7 +4,7 @@ version = "0.1.0"
 
 [dependencies]
 starknet = "2.2.0"
-identity = { git = "https://github.com/starknet-id/identity.git", branch = "master" }
+identity = { git = "https://github.com/starknet-id/identity.git", rev = "5b3114b2b5c4b09346edd8d250026e405f67710f" }
 
 [[target.starknet-contract]]
 # Enable Sierra codegen.
