@@ -1,0 +1,17 @@
+[package]
+name = "verifier_contract"
+version = "0.1.0"
+
+[dependencies]
+starknet = "2.2.0"
+identity = { git = "https://github.com/starknet-id/identity.git", branch = "master" }
+
+[[target.starknet-contract]]
+# Enable Sierra codegen.
+sierra = true
+
+# Enable CASM codegen.
+casm = true
+
+# Emit Python-powered hints in order to run compiled CASM class with legacy Cairo VM.
+casm-add-pythonic-hints = true
