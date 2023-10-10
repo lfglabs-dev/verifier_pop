@@ -8,6 +8,8 @@ trait IVerifier<TContractState> {
         data: felt252,
         sig: (felt252, felt252)
     );
+
+    fn upgrade(ref self: TContractState, new_class_hash: starknet::ClassHash);
 }
 
 #[starknet::contract]
@@ -26,12 +28,17 @@ mod Verifier {
         blacklisted_point: LegacyMap::<felt252, bool>,
         _starknetid_contract: ContractAddress,
         _public_key: felt252,
+        admin: ContractAddress,
     }
 
     #[constructor]
     fn constructor(
-        ref self: ContractState, starknetid_contract: ContractAddress, public_key: felt252
+        ref self: ContractState,
+        admin: ContractAddress,
+        starknetid_contract: ContractAddress,
+        public_key: felt252
     ) {
+        self.admin.write(admin);
         self._starknetid_contract.write(starknetid_contract);
         self._public_key.write(public_key);
     }
@@ -71,6 +78,12 @@ mod Verifier {
 
             IIdentityDispatcher { contract_address: starknetid_contract }
                 .set_verifier_data(token_id, field, 1, 0);
+        }
+
+        fn upgrade(ref self: ContractState, new_class_hash: starknet::ClassHash) {
+            assert(get_caller_address() == self.admin.read(), 'you are not admin');
+            assert(!new_class_hash.is_zero(), 'Class hash cannot be zero');
+            starknet::replace_class_syscall(new_class_hash).unwrap();
         }
     }
 }
