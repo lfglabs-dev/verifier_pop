@@ -28,7 +28,7 @@ mod Verifier {
         blacklisted_point: LegacyMap::<felt252, bool>,
         _starknetid_contract: ContractAddress,
         _public_key: felt252,
-        admin: ContractAddress,
+        Proxy_admin: ContractAddress,
     }
 
     #[constructor]
@@ -38,7 +38,7 @@ mod Verifier {
         starknetid_contract: ContractAddress,
         public_key: felt252
     ) {
-        self.admin.write(admin);
+        self.Proxy_admin.write(admin);
         self._starknetid_contract.write(starknetid_contract);
         self._public_key.write(public_key);
     }
@@ -81,7 +81,7 @@ mod Verifier {
         }
 
         fn upgrade(ref self: ContractState, new_class_hash: starknet::ClassHash) {
-            assert(get_caller_address() == self.admin.read(), 'you are not admin');
+            assert(get_caller_address() == self.Proxy_admin.read(), 'you are not admin');
             assert(!new_class_hash.is_zero(), 'Class hash cannot be zero');
             starknet::replace_class_syscall(new_class_hash).unwrap();
         }
